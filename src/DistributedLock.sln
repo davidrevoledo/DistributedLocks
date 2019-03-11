@@ -7,6 +7,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DistributedLock", "Distribu
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DistributedLock.AzureStorage", "DistributedLock.AzureStorage\DistributedLock.AzureStorage.csproj", "{27BA9C40-07B4-480F-8A39-32D6DC12487B}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{0842F1C8-90C2-4B08-BF43-6E6C5AA9BDBA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{D171A012-4DAD-4109-9F93-206619857D73}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,6 +28,10 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{51122AB5-0B87-4E62-B27E-CFD76CEEFFA7} = {0842F1C8-90C2-4B08-BF43-6E6C5AA9BDBA}
+		{27BA9C40-07B4-480F-8A39-32D6DC12487B} = {0842F1C8-90C2-4B08-BF43-6E6C5AA9BDBA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DA02D22F-63F1-4029-B00A-318CF0851B18}

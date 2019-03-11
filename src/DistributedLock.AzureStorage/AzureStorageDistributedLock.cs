@@ -1,29 +1,25 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
-using DistributedLock.StorageAccount;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.WindowsAzure.Storage.Blob.Protocol;
 using Newtonsoft.Json;
 
-namespace DistributedLock
+namespace DistributedLock.AzureStorage
 {
-    public class AzureStorageAccountDistributedLock : IDistributedLock
+    public class AzureStorageDistributedLock : IDistributedLock
     {
-        private readonly string _connectionString;
+        private readonly AzureStorageDistributedLockOptions _options;
         private CloudStorageAccount _cloudStorageAccount;
         private CloudBlobDirectory _consumerGroupDirectory;
         private CloudBlobContainer _eventHubContainer;
-        private TimeSpan _leaseDuration;
         private OperationContext _operationContext;
 
-        private AzureStorageAccountDistributedLock(string connectionString)
+        private AzureStorageDistributedLock(AzureStorageDistributedLockOptions options)
         {
-            _connectionString = connectionString;
+            _options = options;
         }
-
-        public string Key { get; private set; }
 
         public Task Lock(Func<Task> action)
         {
@@ -36,14 +32,16 @@ namespace DistributedLock
 
         public async Task<T> Lock<T>(Func<Task<T>> result)
         {
-            var lease = await CreateLeaseIfNotExistsAsync(Key).ConfigureAwait(false);
+            var lease = await CreateLeaseIfNotExistsAsync(_options.Key).ConfigureAwait(false);
             var operationPerformed = false;
             var value = default(T);
 
-            while (!operationPerformed)
+            var attempts = 0;
+            while (!operationPerformed && attempts <= _options.RetryTimes)
             {
                 try
                 {
+                    attempts++;
                     var acquired = await AcquireLeaseAsync(lease).ConfigureAwait(false);
 
                     if (acquired)
@@ -51,6 +49,7 @@ namespace DistributedLock
                         operationPerformed = true;
                         value = await result.Invoke().ConfigureAwait(false);
                     }
+                    // todo remove
                     else
                     {
                         Console.WriteLine("Waiting for releasing....");
@@ -61,18 +60,18 @@ namespace DistributedLock
                     await ReleaseLeaseAsync(lease).ConfigureAwait(false);
                 }
 
-                await Task.Delay(100).ConfigureAwait(false); // todo : make this configurable
+                await Task.Delay(_options.RetryWaitTime).ConfigureAwait(false);
             }
 
             return value;
         }
 
-        public static async Task<IDistributedLock> Create(string connectionString, string key)
+        public static async Task<IDistributedLock> Create(string key, Action<AzureStorageDistributedLockOptions> optionsBuilder = null)
         {
-            var locker = new AzureStorageAccountDistributedLock(connectionString)
-            {
-                Key = key
-            };
+            var options = new AzureStorageDistributedLockOptions(key);
+            optionsBuilder?.Invoke(options);
+
+            var locker = new AzureStorageDistributedLock(options);
 
             await locker.Init().ConfigureAwait(false);
             return locker;
@@ -80,16 +79,13 @@ namespace DistributedLock
 
         private async Task Init()
         {
-            _cloudStorageAccount = CloudStorageAccount.Parse(_connectionString);
+            _cloudStorageAccount = CloudStorageAccount.Parse(_options.ConnectionString);
             var storageClient = _cloudStorageAccount.CreateCloudBlobClient();
 
-            // todo : make all of this configurable
-            _eventHubContainer = storageClient.GetContainerReference("distributedlocks4");
+            _eventHubContainer = storageClient.GetContainerReference(_options.Container.ToLower());
             await _eventHubContainer.CreateIfNotExistsAsync().ConfigureAwait(false);
 
-            _consumerGroupDirectory = _eventHubContainer.GetDirectoryReference("nodes");
-            _leaseDuration = TimeSpan.FromMinutes(1);
-
+            _consumerGroupDirectory = _eventHubContainer.GetDirectoryReference(_options.Directory.ToLower());
             _operationContext = new OperationContext();
         }
 
@@ -173,7 +169,12 @@ namespace DistributedLock
                 {
                     try
                     {
-                        newToken = await leaseBlob.AcquireLeaseAsync(_leaseDuration, newLeaseId, null, null, _operationContext)
+                        newToken = await leaseBlob.AcquireLeaseAsync(
+                                _options.LeaseDurationInSeconds,
+                                newLeaseId,
+                                null,
+                                null,
+                                _operationContext)
                             .ConfigureAwait(false);
                     }
                     catch (StorageException se)
@@ -209,7 +210,7 @@ namespace DistributedLock
                     se.RequestInformation.ErrorCode == BlobErrorCodeStrings.LeaseLost ||
                     se.RequestInformation.ErrorCode == BlobErrorCodeStrings.LeaseIdMismatchWithLeaseOperation ||
                     se.RequestInformation.ErrorCode == BlobErrorCodeStrings.LeaseIdMismatchWithBlobOperation)
-                    return new LeaseLostException(key, se);
+                    return new Exception(key, se);
 
             return se;
         }

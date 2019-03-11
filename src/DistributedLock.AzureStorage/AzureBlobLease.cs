@@ -2,7 +2,7 @@
 using Microsoft.WindowsAzure.Storage.Blob;
 using Newtonsoft.Json;
 
-namespace DistributedLock.StorageAccount
+namespace DistributedLock.AzureStorage
 {
     internal class AzureBlobLease : Lease
     {
