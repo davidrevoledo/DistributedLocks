@@ -1,4 +1,25 @@
-﻿using System;
+﻿//MIT License
+//Copyright(c) 2018 David Revoledo
+
+//Permission is hereby granted, free of charge, to any person obtaining a copy
+//of this software and associated documentation files (the "Software"), to deal
+//in the Software without restriction, including without limitation the rights
+//to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+//copies of the Software, and to permit persons to whom the Software is
+//furnished to do so, subject to the following conditions:
+
+//The above copyright notice and this permission notice shall be included in all
+//copies or substantial portions of the Software.
+
+//THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+//IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+//AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+//OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+//SOFTWARE.
+// Project Lead - David Revoledo davidrevoledo@d-genix.com
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.WindowsAzure.Storage;
@@ -8,11 +29,17 @@ using Newtonsoft.Json;
 
 namespace DistributedLock.AzureStorage
 {
+    /// <summary>
+    ///     Distributed locks using azure storage account.
+    /// </summary>
     public class AzureStorageDistributedLock : IDistributedLock
     {
         private readonly AzureStorageDistributedLockOptions _options;
+        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1);
+
         private CloudStorageAccount _cloudStorageAccount;
         private CloudBlobDirectory _consumerGroupDirectory;
+        private int _disposeSignaled;
         private CloudBlobContainer _eventHubContainer;
         private OperationContext _operationContext;
 
@@ -21,49 +48,68 @@ namespace DistributedLock.AzureStorage
             _options = options;
         }
 
-        public Task Lock(Func<Task> action)
+        public bool Disposed { get; set; }
+
+        /// <inheritdoc cref="IDistributedLock" />
+        public Task Execute(Func<Task> action)
         {
-            return Lock(async () =>
+            return Execute(async () =>
             {
                 await action.Invoke().ConfigureAwait(false);
                 return true;
             });
         }
 
-        public async Task<T> Lock<T>(Func<Task<T>> result)
+        /// <inheritdoc cref="IDistributedLock" />
+        public async Task<T> Execute<T>(Func<Task<T>> result)
         {
-            var lease = await CreateLeaseIfNotExistsAsync(_options.Key).ConfigureAwait(false);
-            var operationPerformed = false;
-            var value = default(T);
-
-            var attempts = 0;
-            while (!operationPerformed && attempts <= _options.RetryTimes)
+            try
             {
-                try
-                {
-                    attempts++;
-                    var acquired = await AcquireLeaseAsync(lease).ConfigureAwait(false);
+                // if the task is executed within the same process we can lock by code each operation avoiding internal http calls if 
+                // there is a single competitor node
+                await _semaphore.WaitAsync().ConfigureAwait(false);
 
-                    if (acquired)
-                    {
-                        operationPerformed = true;
-                        value = await result.Invoke().ConfigureAwait(false);
-                    }
-                    // todo remove
-                    else
-                    {
-                        Console.WriteLine("Waiting for releasing....");
-                    }
-                }
-                finally
+                var lease = await CreateLeaseIfNotExistsAsync(_options.Key).ConfigureAwait(false);
+                var operationPerformed = false;
+                var value = default(T);
+
+                var attempts = 0;
+                while (!operationPerformed && attempts <= _options.RetryTimes)
                 {
-                    await ReleaseLeaseAsync(lease).ConfigureAwait(false);
+                    try
+                    {
+                        attempts++;
+                        var acquired = await AcquireLeaseAsync(lease).ConfigureAwait(false);
+                        if (acquired)
+                        {
+                            operationPerformed = true;
+                            value = await result.Invoke().ConfigureAwait(false);
+                        }
+                    }
+                    finally
+                    {
+                        await ReleaseLeaseAsync(lease).ConfigureAwait(false);
+                    }
+
+                    await Task.Delay(_options.RetryWaitTime).ConfigureAwait(false);
                 }
 
-                await Task.Delay(_options.RetryWaitTime).ConfigureAwait(false);
+                return value;
             }
+            finally
+            {
+                _semaphore.Release();
+            }
+        }
 
-            return value;
+        /// <inheritdoc cref="IDisposable" />
+        public void Dispose()
+        {
+            if (Interlocked.Exchange(ref _disposeSignaled, 1) != 0)
+                return;
+
+            _semaphore?.Release();
+            Disposed = true;
         }
 
         public static async Task<IDistributedLock> Create(string key, Action<AzureStorageDistributedLockOptions> optionsBuilder = null)
