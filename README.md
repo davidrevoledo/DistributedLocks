@@ -130,6 +130,15 @@ The Renewal time should be less than the Lease Duration.
 
       return locker.ExecuteAsync(async context =>
       {
+          locker = await AzureStorageDistributedLock.CreateAsync(
+            "longmethod",
+            options =>
+            {
+                options.ConnectionString = storageKey;
+                options.Directory = "leaserenewal";
+                options.LeaseDuration = TimeSpan.FromSeconds(30);
+            });
+      
           Console.WriteLine("Huge work starting");
 
           // stage 1 - 15 seconds
