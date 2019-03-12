@@ -19,7 +19,7 @@ DistributedLocks
 |dev|[![Build status](https://ci.appveyor.com/api/projects/status/ak0heuv6ckkaoft3?svg=true)](https://ci.appveyor.com/project/davidrevoledo/aspnetcore-autohealthcheck-4hy94)|[![CodeFactor](https://www.codefactor.io/repository/github/davidrevoledo/distributedlocks/badge/dev)](https://www.codefactor.io/repository/github/davidrevoledo/distributedlocks/overview/dev)
 
 # Introduction
-[CAP Theorem](https://es.wikipedia.org/wiki/Teorema_CAP) is about distributed computing, always is convenient choosing availability over consistency, however there are some cases where consistency is a must.
+[CAP Theorem](https://en.wikipedia.org/wiki/CAP_theorem) is about distributed computing, always is convenient choosing availability over consistency, however there are some cases where consistency is a must.
 
 Consider using a serverless solution to process messages from a queue, (simple implementation of [Queue-Worker-Pattern](https://docs.microsoft.com/en-us/azure/architecture/guide/architecture-styles/web-queue-worker)), let's say you are using Azure Functions for it. It is perfect because you can control your work load without rejecting operations but... what about if a your are editing user bank accounts and you should prevent other operation change the account until your process is complete, you want to still use a messaging-style arquitecture but in that point Consistency becomes more important that Availability.
 
