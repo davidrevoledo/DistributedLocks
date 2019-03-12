@@ -106,7 +106,7 @@ await  locker.ExecuteAsync(async context =>
 });
            
 ```
-### Options 
+#### Options 
 ``` c#
     locker = await AzureStorageDistributedLock.CreateAsync(
         "work",
@@ -119,7 +119,7 @@ await  locker.ExecuteAsync(async context =>
         });
 ```
 
-### Long Methods
+#### Long Methods
 If your method need more time to be executed the lease need be renewed, the control of when renew should be made by the program.
 The Renewal time should be less than the Lease Duration.
 
