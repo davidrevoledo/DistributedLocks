@@ -171,6 +171,8 @@ The Renewal time should be less than the Lease Duration.
   }
 ```
 
+For more examples please check samples folder in the repo.
+
 ====================
 
 [![forthebadge](https://forthebadge.com/images/badges/built-with-love.svg)](http://forthebadge.com)
