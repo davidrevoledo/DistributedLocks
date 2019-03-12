@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="DistributedLock.png" alt="DistributedLock" width="100"/>
+  <img src="DistributedLocks.png" alt="DistributedLocks" width="100"/>
 </p>
 
 DistributedLock
@@ -7,13 +7,60 @@ DistributedLock
 - Distributed Lockers Implementation for Distributed competing Nodes executing some action.
 - Azure Storage Client.
 
-![NuGet](https://img.shields.io/nuget/dt/DistributedLock.svg)
-![NuGet](https://img.shields.io/nuget/v/DistributedLock.svg)
+![NuGet](https://img.shields.io/nuget/dt/DistributedLocks.svg)
+![NuGet](https://img.shields.io/nuget/v/DistributedLocks.svg)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Open Source Love](https://badges.frapsoft.com/os/v1/open-source.svg?v=102)](https://github.com/ellerbrock/open-source-badge/)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
 
 # Introduction
+[CAP Theorem](https://es.wikipedia.org/wiki/Teorema_CAP) is about distributed computing, always is convenient choosing availability over consistency, however there are some cases where consistency is a must.
+
+Consider using a serverless solution to process messages from a queue, (simple implementation of [Queue-Worker-Pattern](https://docs.microsoft.com/en-us/azure/architecture/guide/architecture-styles/web-queue-worker)), let's say you are using Azure Functions for it. It is perfect because you can control your work load without rejecting operations but... what about if a your are editing user bank accounts and you should prevent other operation change the account until your process is complete, you want to still use a messaging-style arquitecture but in that point Consistency becomes more important that Availability.
+
+In those scenarios are where this package helps to solve it providing strong-consistency in methods no matter if you are using a serverless approach or not.
+
+Just block a call with a key (could be the account number in the example) and avoid other process executing any code blocked by your key, no matter in what machine process the code is being executed.
+
+The usage is straight forward.
+
+``` c#
+
+// Process 1
+IDistributedLock locker = await AzureStorageDistributedLock.CreateAsync(
+            "a1239120391321", // account number
+            options =>
+            {
+                options.ConnectionString = storageKey;
+                options.Directory = "accountblocks";
+            });
+          
+// Process a payment
+await  locker.ExecuteAsync(async context =>
+{
+     BankAccount account = new BankAccount("a1239120391321")
+     await account.ProcessPaymentAsync(500, "USD");
+});
+            
+// Process 2
+IDistributedLock locker = await AzureStorageDistributedLock.CreateAsync(
+            "a1239120391321", // account number
+            options =>
+            {
+                options.ConnectionString = storageKey;
+                options.Directory = "accountblocks";
+            });
+            
+// Process cash extraction
+await  locker.ExecuteAsync(async context =>
+{
+     BankAccount account = new BankAccount("a1239120391321")
+     // this will wait until the lock is released by the process 1
+     await account.ProcessExtractionAsync(1000, "USD");
+});
+
+```
+
 
 
 # Contents
@@ -35,11 +82,11 @@ DistributedLock
 
 ## <a name="installation"> Installation </a>
 
-Grab the latest DistributedLock NuGet package and install in the desired package. https://www.nuget.org/packages/DistributedLock/
+Grab the latest DistributedLock NuGet package and install in the desired package. https://www.nuget.org/packages/DistributedLocks/
 ```sh
-PM > Install-Package DistributedLock
-NET CLI - dotnet add package DistributedLock 
-paket add DistributedLock 
+PM > Install-Package DistributedLocks
+NET CLI - dotnet add package DistributedLocks
+paket add DistributedLocks
 ```
 ====================
 
