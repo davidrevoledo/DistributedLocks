@@ -35,7 +35,7 @@ DistributedLock
 
 ## <a name="installation"> Installation </a>
 
-Grab the latest DistributedLock NuGet package and install in the desired package. https://www.nuget.org/packages/AspNetCore.DistributedLock/
+Grab the latest DistributedLock NuGet package and install in the desired package. https://www.nuget.org/packages/DistributedLock/
 ```sh
 PM > Install-Package DistributedLock
 NET CLI - dotnet add package DistributedLock 
