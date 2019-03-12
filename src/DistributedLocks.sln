@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.28705.295
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DistributedLock", "DistributedLock\DistributedLock.csproj", "{51122AB5-0B87-4E62-B27E-CFD76CEEFFA7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DistributedLocks", "DistributedLock\DistributedLocks.csproj", "{51122AB5-0B87-4E62-B27E-CFD76CEEFFA7}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DistributedLock.AzureStorage", "DistributedLock.AzureStorage\DistributedLock.AzureStorage.csproj", "{27BA9C40-07B4-480F-8A39-32D6DC12487B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DistributedLocks.AzureStorage", "DistributedLock.AzureStorage\DistributedLocks.AzureStorage.csproj", "{27BA9C40-07B4-480F-8A39-32D6DC12487B}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{0842F1C8-90C2-4B08-BF43-6E6C5AA9BDBA}"
 EndProject
@@ -26,6 +26,12 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Node1", "..\samples\3-MultiNodes\Node1\Node1.csproj", "{74AF12E5-2FCA-49F7-BAD8-22186651E926}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Node2", "..\samples\3-MultiNodes\Node2\Node2.csproj", "{7EF67B4A-4994-4368-9B21-62EBF007EC52}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DistributedLocks.AzureStorage.Tests", "..\tests\DistributedLock.AzureStorage.Tests\DistributedLocks.AzureStorage.Tests.csproj", "{144DDBC4-12B6-43B6-B50F-DC35114F6279}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "4-LeaseRenewal", "4-LeaseRenewal", "{75FB78F3-3294-490D-9312-7EFD97414300}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LeaseRenewal", "..\samples\4-LeaseRenewal\LeaseRenewal\LeaseRenewal.csproj", "{F4BF9966-E2BB-4074-9915-5AB23615EF87}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -57,6 +63,14 @@ Global
 		{7EF67B4A-4994-4368-9B21-62EBF007EC52}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7EF67B4A-4994-4368-9B21-62EBF007EC52}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7EF67B4A-4994-4368-9B21-62EBF007EC52}.Release|Any CPU.Build.0 = Release|Any CPU
+		{144DDBC4-12B6-43B6-B50F-DC35114F6279}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{144DDBC4-12B6-43B6-B50F-DC35114F6279}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{144DDBC4-12B6-43B6-B50F-DC35114F6279}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{144DDBC4-12B6-43B6-B50F-DC35114F6279}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F4BF9966-E2BB-4074-9915-5AB23615EF87}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F4BF9966-E2BB-4074-9915-5AB23615EF87}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F4BF9966-E2BB-4074-9915-5AB23615EF87}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F4BF9966-E2BB-4074-9915-5AB23615EF87}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -71,6 +85,9 @@ Global
 		{3856EE4F-73A6-48B1-8DB8-3DB56892F872} = {F9C7A47F-608C-4553-9BB6-5538B6680651}
 		{74AF12E5-2FCA-49F7-BAD8-22186651E926} = {2E333A1A-5AF9-4A8D-A826-8BD1B55EAE06}
 		{7EF67B4A-4994-4368-9B21-62EBF007EC52} = {2E333A1A-5AF9-4A8D-A826-8BD1B55EAE06}
+		{144DDBC4-12B6-43B6-B50F-DC35114F6279} = {D171A012-4DAD-4109-9F93-206619857D73}
+		{75FB78F3-3294-490D-9312-7EFD97414300} = {331E565F-D8E5-4B2D-9683-92BDCCC64864}
+		{F4BF9966-E2BB-4074-9915-5AB23615EF87} = {75FB78F3-3294-490D-9312-7EFD97414300}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {DA02D22F-63F1-4029-B00A-318CF0851B18}

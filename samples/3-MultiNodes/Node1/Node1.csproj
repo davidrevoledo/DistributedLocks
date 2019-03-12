@@ -10,8 +10,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\DistributedLock.AzureStorage\DistributedLock.AzureStorage.csproj" />
-    <ProjectReference Include="..\..\..\src\DistributedLock\DistributedLock.csproj" />
+    <ProjectReference Include="..\..\..\src\DistributedLock.AzureStorage\DistributedLocks.AzureStorage.csproj" />
+    <ProjectReference Include="..\..\..\src\DistributedLock\DistributedLocks.csproj" />
   </ItemGroup>
 
 </Project>

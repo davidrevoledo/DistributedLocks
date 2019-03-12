@@ -19,11 +19,12 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 // Project Lead - David Revoledo davidrevoledo@d-genix.com
+
 using System.Threading.Tasks;
 using Microsoft.WindowsAzure.Storage.Blob;
 using Newtonsoft.Json;
 
-namespace DistributedLock.AzureStorage
+namespace DistributedLocks.AzureStorage
 {
     internal class AzureBlobLease : Lease
     {

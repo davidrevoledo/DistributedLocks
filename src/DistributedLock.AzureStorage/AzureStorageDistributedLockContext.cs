@@ -23,32 +23,29 @@
 using System;
 using System.Threading.Tasks;
 
-namespace DistributedLocks
+namespace DistributedLocks.AzureStorage
 {
     /// <summary>
-    ///     Distributed lock abstraction.
+    ///     Context that represent the context of distributed locks using azure storage.
     /// </summary>
-    public interface IDistributedLock : IDisposable
+    public class AzureStorageDistributedLockContext : IDistributedLockContext
     {
-        /// <summary>
-        ///     Lock to execute some action
-        /// </summary>
-        /// <param name="action">the delegate to create the action to execute async.</param>
-        /// <returns></returns>
-        Task ExecuteAsync(Func<IDistributedLockContext, Task> action);
+        private readonly AzureStorageDistributedLock _locker;
 
-        /// <summary>
-        ///     Lock to execute some action and return a value.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="result">the delegate to create the task who return the result</param>
-        /// <returns>the result of the operation</returns>
-        Task<T> ExecuteAsync<T>(Func<IDistributedLockContext, Task<T>> result);
+        internal AzureStorageDistributedLockContext(AzureStorageDistributedLock locker)
+        {
+            _locker = locker;
+        }
 
-        /// <summary>
-        ///     Release lock.
-        /// </summary>
-        /// <returns></returns>
-        Task ReleaseLockAsync();
+        /// <inheritdoc cref="IDistributedLockContext" />
+        public Task<bool> RenewLeaseAsync(TimeSpan renewInterval)
+        {
+            if (renewInterval >= _locker.Options.LeaseDuration)
+            {
+                throw new ArgumentException("Renew interval needs to be smaller than the lease duration.");
+            }
+
+            return _locker.RenewLease(renewInterval);
+        }
     }
 }

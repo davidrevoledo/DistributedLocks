@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Configuration;
 using System.Threading.Tasks;
-using DistributedLock;
-using DistributedLock.AzureStorage;
+using DistributedLocks;
+using DistributedLocks.AzureStorage;
 
-namespace ConsoleApp1
+namespace SingleNode
 {
     internal class Program
     {
@@ -17,7 +17,7 @@ namespace ConsoleApp1
 
             Task.Run(async () =>
             {
-                locker = await AzureStorageDistributedLock.Create(
+                locker = await AzureStorageDistributedLock.CreateAsync(
                     "parallelwork1",
                     options =>
                     {
@@ -47,7 +47,7 @@ namespace ConsoleApp1
         {
             Console.WriteLine($"Node 1 work n {number} launched");
 
-            return locker.Execute(async () =>
+            return locker.ExecuteAsync(async context =>
             {
                 Console.WriteLine($"Node 1 work n {number} starting");
                 await Task.Delay(2000);

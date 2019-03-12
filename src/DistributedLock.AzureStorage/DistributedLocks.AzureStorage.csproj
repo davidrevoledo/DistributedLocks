@@ -1,11 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <TargetFrameworks>net461;netstandard2.0</TargetFrameworks>
-        <PackageId>DistributedLock.AzureStorage</PackageId>
+        <PackageId>DistributedLocks.AzureStorage</PackageId>
         <PackageVersion>1.0.0</PackageVersion>
         <Authors>David Revoledo (Deivit)</Authors>
         <Owners>David Revoledo</Owners>
-        <PackageProjectUrl>https://github.com/davidrevoledo/DistributedLock</PackageProjectUrl>
+        <PackageProjectUrl>https://github.com/davidrevoledo/DistributedLocks</PackageProjectUrl>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <Description>Easy usage implementation of distributed locks using azure storage account.</Description>
         <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
@@ -21,6 +21,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\DistributedLock\DistributedLock.csproj" />
+      <ProjectReference Include="..\DistributedLock\DistributedLocks.csproj" />
     </ItemGroup>
 </Project>

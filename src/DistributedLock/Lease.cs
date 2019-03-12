@@ -19,9 +19,10 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 // Project Lead - David Revoledo davidrevoledo@d-genix.com
+
 using System.Threading.Tasks;
 
-namespace DistributedLock
+namespace DistributedLocks
 {
     /// <summary>
     ///     Contains locker ownership information.

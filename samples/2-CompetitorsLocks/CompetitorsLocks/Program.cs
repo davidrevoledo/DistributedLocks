@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Configuration;
 using System.Threading.Tasks;
-using DistributedLock;
-using DistributedLock.AzureStorage;
+using DistributedLocks;
+using DistributedLocks.AzureStorage;
 
-namespace ConsoleApp1
+namespace CompetitorsLocks
 {
     internal class Program
     {
@@ -30,7 +30,7 @@ namespace ConsoleApp1
             IDistributedLock locker;
             var storageKey = ConfigurationManager.AppSettings["storageKey"];
 
-            locker = await AzureStorageDistributedLock.Create(
+            locker = await AzureStorageDistributedLock.CreateAsync(
                 "parallelwork1",
                 options =>
                 {
@@ -57,7 +57,7 @@ namespace ConsoleApp1
         {
             Console.WriteLine($"Worker {key} work n {number} launched");
 
-            return locker.Execute(async () =>
+            return locker.ExecuteAsync(async context =>
             {
                 Console.WriteLine($"Worker {key} work n {number} starting");
                 await Task.Delay(2000);

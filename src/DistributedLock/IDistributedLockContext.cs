@@ -26,29 +26,18 @@ using System.Threading.Tasks;
 namespace DistributedLocks
 {
     /// <summary>
-    ///     Distributed lock abstraction.
+    ///     Distributed lock context information and behavior.
     /// </summary>
-    public interface IDistributedLock : IDisposable
+    public interface IDistributedLockContext
     {
         /// <summary>
-        ///     Lock to execute some action
+        ///     Renew the lock for the current competitor node.
         /// </summary>
-        /// <param name="action">the delegate to create the action to execute async.</param>
-        /// <returns></returns>
-        Task ExecuteAsync(Func<IDistributedLockContext, Task> action);
-
-        /// <summary>
-        ///     Lock to execute some action and return a value.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="result">the delegate to create the task who return the result</param>
-        /// <returns>the result of the operation</returns>
-        Task<T> ExecuteAsync<T>(Func<IDistributedLockContext, Task<T>> result);
-
-        /// <summary>
-        ///     Release lock.
-        /// </summary>
-        /// <returns></returns>
-        Task ReleaseLockAsync();
+        /// <param name="renewInterval">time to renew the lock</param>
+        /// <returns>
+        ///     true if the renewal was processed properly.
+        ///     false if the renewal could not be processed properly, if so then other node could have taken the lock.
+        /// </returns>
+        Task<bool> RenewLeaseAsync(TimeSpan renewInterval);
     }
 }

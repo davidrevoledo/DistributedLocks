@@ -19,9 +19,10 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
 // Project Lead - David Revoledo davidrevoledo@d-genix.com
+
 using System;
 
-namespace DistributedLock.AzureStorage
+namespace DistributedLocks.AzureStorage
 {
     public class AzureStorageDistributedLockOptions
     {
@@ -46,10 +47,10 @@ namespace DistributedLock.AzureStorage
         public string Directory { get; set; } = "nodes";
 
         /// <summary>
-        ///     Lease duration in seconds, this value should be from 1 to 60. (30 seconds is the default)
+        ///     Lease duration, this value should be from 15 to 60 seconds. (30 seconds is the default)
         ///     If your work will use more than 60 seconds consider split it.
         /// </summary>
-        public TimeSpan LeaseDurationInSeconds { get; set; } = TimeSpan.FromSeconds(30);
+        public TimeSpan LeaseDuration { get; set; } = TimeSpan.FromSeconds(30);
 
         /// <summary>
         ///     Time to wait when the action cannot be executed because the lock is waiting for a node releasing,
