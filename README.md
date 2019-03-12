@@ -16,8 +16,7 @@ DistributedLocks
 |Build|Status|CodeFactor|
 |------|-------------|-------------|
 |master|[![Build status](https://ci.appveyor.com/api/projects/status/3s1txd8lrbvn82v2/branch/master?svg=true)](https://ci.appveyor.com/project/davidrevoledo/aspnetcore-autohealthcheck/branch/master)|[![CodeFactor](https://www.codefactor.io/repository/github/davidrevoledo/aspnetcore.autohealthcheck/badge)](https://www.codefactor.io/repository/github/davidrevoledo/aspnetcore.autohealthcheck)
-|dev|[![Build status](https://ci.appveyor.com/api/projects/status/ak0heuv6ckkaoft3?svg=true)](https://ci.appveyor.com/project/davidrevoledo/aspnetcore-autohealthcheck-4hy94)|
-[![CodeFactor](https://www.codefactor.io/repository/github/davidrevoledo/distributedlocks/badge/dev)](https://www.codefactor.io/repository/github/davidrevoledo/distributedlocks/overview/dev)
+|dev|[![Build status](https://ci.appveyor.com/api/projects/status/ak0heuv6ckkaoft3?svg=true)](https://ci.appveyor.com/project/davidrevoledo/aspnetcore-autohealthcheck-4hy94)|[![CodeFactor](https://www.codefactor.io/repository/github/davidrevoledo/distributedlocks/badge/dev)](https://www.codefactor.io/repository/github/davidrevoledo/distributedlocks/overview/dev)
 
 # Introduction
 [CAP Theorem](https://es.wikipedia.org/wiki/Teorema_CAP) is about distributed computing, always is convenient choosing availability over consistency, however there are some cases where consistency is a must.
