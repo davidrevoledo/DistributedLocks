@@ -31,7 +31,7 @@ IDistributedLock locker = await AzureStorageDistributedLock.CreateAsync(
             "a1239120391321", // account number
             options =>
             {
-                options.ConnectionString = storageKey;
+                options.ConnectionString = "Insert Storage Key here";
                 options.Directory = "accountblocks";
             });
           
@@ -47,7 +47,7 @@ IDistributedLock locker = await AzureStorageDistributedLock.CreateAsync(
             "a1239120391321", // account number
             options =>
             {
-                options.ConnectionString = storageKey;
+                options.ConnectionString = "Insert Storage Key here";
                 options.Directory = "accountblocks";
             });
             
@@ -61,15 +61,12 @@ await  locker.ExecuteAsync(async context =>
 
 ```
 
-
-
 # Contents
 
 1. [Features](#features)
 2. [Installation](#installation)
 3. [Usage](#usage)
-4. [Integrations](#integrations)
-6. [License](#license)
+4. [License](#license)
 
 ## <a name="features"> Features </a>
 
@@ -88,14 +85,82 @@ PM > Install-Package DistributedLocks
 NET CLI - dotnet add package DistributedLocks
 paket add DistributedLocks
 ```
+
 ====================
 
 ## <a name="usage"> Usage </a>
 
+``` c#
 
-====================
+// Process 1
+IDistributedLock locker = await AzureStorageDistributedLock.CreateAsync(
+            "AnyKey", // account number
+            options =>
+            {
+                options.ConnectionString = "Insert Storage Key here";
+            });
+          
+await  locker.ExecuteAsync(async context =>
+{
+     await Task.Delay(1000); // execute some action here
+});
+           
+```
+### Options 
+``` c#
+    locker = await AzureStorageDistributedLock.CreateAsync(
+        "work",
+        options =>
+        {
+            options.ConnectionString = storageKey; // azure storage account key
+            options.Directory = "singlenode"; // directory where save checkpoints
+            options.RetryTimes = 100; // intents until stop trying
+            options.LeaseDuration = TimeSpan.FromSeconds(20); // lease duration in azure storage account is between 10 - 60 seconds
+        });
+```
 
-## <a name="integrations"> Integrations </a>
+### Long Methods
+If your method need more time to be executed the lease need be renewed, the control of when renew should be made by the program.
+The Renewal time should be less than the Lease Duration.
+
+``` c#
+  private static Task DoHugeWork()
+  {
+      Console.WriteLine("Huge work launched");
+
+      return locker.ExecuteAsync(async context =>
+      {
+          Console.WriteLine("Huge work starting");
+
+          // stage 1 - 15 seconds
+          await Task.Delay(15000);
+          var moreTime = await context.RenewLeaseAsync(TimeSpan.FromSeconds(20));
+          if(!moreTime)
+            RollbackOperation();
+          
+          Console.WriteLine("Getting more time to get the work done");
+
+          // stage 2 - 15 seconds
+          await Task.Delay(15000);
+          moreTime = await context.RenewLeaseAsync(TimeSpan.FromSeconds(20));
+          if(!moreTime)
+            RollbackOperation();
+          Console.WriteLine("Getting more time to get the work done");
+
+          // stage 3 - 15 seconds
+          await Task.Delay(15000);
+          moreTime = await context.RenewLeaseAsync(TimeSpan.FromSeconds(20));
+          if(!moreTime)
+            RollbackOperation();
+          Console.WriteLine("Getting more time to get the work done");
+
+          // stage 4 - 15 seconds
+          await Task.Delay(15000);
+
+          Console.WriteLine("Huge work finished");
+      });
+  }
+```
 
 ====================
 
