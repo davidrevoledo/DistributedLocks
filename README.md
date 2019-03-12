@@ -2,7 +2,7 @@
   <img src="DistributedLocks.png" alt="DistributedLocks" width="100"/>
 </p>
 
-DistributedLock
+DistributedLocks
 ====================
 - Distributed Lockers Implementation for Distributed competing Nodes executing some action.
 - Azure Storage Client.
