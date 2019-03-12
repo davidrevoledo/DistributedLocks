@@ -21,7 +21,7 @@ DistributedLocks
 # Introduction
 [CAP Theorem](https://en.wikipedia.org/wiki/CAP_theorem) is about distributed computing, always is convenient choosing availability over consistency, however there are some cases where consistency is a must.
 
-Consider using a serverless solution to process messages from a queue, (simple implementation of [Queue-Worker-Pattern](https://docs.microsoft.com/en-us/azure/architecture/guide/architecture-styles/web-queue-worker)), let's say you are using Azure Functions for it. It is perfect because you can control your work load without rejecting operations but... what about if a your are editing user bank accounts and you should prevent other operation change the account until your process is complete, you want to still use a messaging-style arquitecture but in that point Consistency becomes more important that Availability.
+Consider using a serverless solution to process messages from a queue, (simple implementation of [Queue-Worker-Pattern](https://docs.microsoft.com/en-us/azure/architecture/guide/architecture-styles/web-queue-worker)), let's say you are using Azure Functions for it. The solution is perfect because you can control your work load without rejecting operations but... what about if a your are editing user's bank accounts and you should prevent other operation change the account until your process is complete. You want to still use a messaging-style arquitecture but in that point Consistency becomes more important that Availability.
 
 Those scenarios are where this package comes to solve it providing strong-consistency in methods no matter if you are using a serverless approach or not.
 
