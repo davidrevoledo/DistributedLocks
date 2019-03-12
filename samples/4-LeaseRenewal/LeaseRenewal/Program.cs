@@ -26,7 +26,6 @@ namespace LeaseRenewal
                         options.LeaseDuration = TimeSpan.FromSeconds(30);
                     });
 
-
                 var tasks = new List<Task>
                 {
                     DoHugeWork(),
