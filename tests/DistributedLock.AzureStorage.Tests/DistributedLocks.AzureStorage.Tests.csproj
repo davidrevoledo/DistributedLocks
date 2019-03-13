@@ -8,8 +8,14 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.0.0-preview-20181205-02" />
+    <PackageReference Include="Moq" Version="4.10.1" />
     <PackageReference Include="xunit" Version="2.4.0" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\DistributedLock.AzureStorage\DistributedLocks.AzureStorage.csproj" />
+    <ProjectReference Include="..\..\src\DistributedLock\DistributedLocks.csproj" />
   </ItemGroup>
 
 </Project>

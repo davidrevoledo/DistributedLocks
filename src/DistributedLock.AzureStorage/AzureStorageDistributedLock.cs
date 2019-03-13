@@ -33,7 +33,7 @@ namespace DistributedLocks.AzureStorage
     /// <summary>
     ///     Distributed locks using azure storage account.
     /// </summary>
-    public class AzureStorageDistributedLock : IDistributedLock
+    public class AzureStorageDistributedLock : IAzureStorageDistributedLock
     {
         private readonly IDistributedLockContext _currentContext;
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1);
@@ -51,6 +51,9 @@ namespace DistributedLocks.AzureStorage
             _currentContext = new AzureStorageDistributedLockContext(this);
         }
 
+        /// <summary>
+        ///     Options to configure the azure storage distributed locker
+        /// </summary>
         public AzureStorageDistributedLockOptions Options { get; }
 
         public bool Disposed { get; set; }
@@ -152,6 +155,39 @@ namespace DistributedLocks.AzureStorage
 
             await locker.Init().ConfigureAwait(false);
             return locker;
+        }
+
+        /// <summary>
+        ///     Renew the lease, getting more time to get a work done.
+        /// </summary>
+        /// <param name="renewInterval">required time</param>
+        /// <returns></returns>
+        public async Task<bool> RenewLease(TimeSpan renewInterval)
+        {
+            var renewRequestOptions = new BlobRequestOptions
+            {
+                ServerTimeout = renewInterval,
+                MaximumExecutionTime = Options.LeaseDuration
+            };
+
+            var lease = _currentLease;
+
+            if (lease == null)
+                return false;
+
+            try
+            {
+                await lease.Blob.RenewLeaseAsync(
+                    AccessCondition.GenerateLeaseCondition(lease.Token),
+                    renewRequestOptions,
+                    _storageContext).ConfigureAwait(false);
+            }
+            catch (StorageException)
+            {
+                return false;
+            }
+
+            return true;
         }
 
         private async Task Init()
@@ -328,34 +364,6 @@ namespace DistributedLocks.AzureStorage
             catch (StorageException se)
             {
                 throw HandleStorageException(key, se);
-            }
-
-            return true;
-        }
-
-        internal async Task<bool> RenewLease(TimeSpan renewInterval)
-        {
-            var renewRequestOptions = new BlobRequestOptions
-            {
-                ServerTimeout = renewInterval,
-                MaximumExecutionTime = Options.LeaseDuration
-            };
-
-            var lease = _currentLease;
-
-            if (lease == null)
-                return false;
-
-            try
-            {
-                await lease.Blob.RenewLeaseAsync(
-                    AccessCondition.GenerateLeaseCondition(lease.Token),
-                    renewRequestOptions,
-                    _storageContext).ConfigureAwait(false);
-            }
-            catch (StorageException)
-            {
-                return false;
             }
 
             return true;

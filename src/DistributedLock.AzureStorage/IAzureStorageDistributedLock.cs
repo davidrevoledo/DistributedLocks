@@ -18,34 +18,25 @@
 //LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 //SOFTWARE.
-// Project Lead - David Revoledo davidrevoledo@d-genix.com
+// Project Lead - David Revoledo davidrevoledo@d-genix.co
 
 using System;
 using System.Threading.Tasks;
 
 namespace DistributedLocks.AzureStorage
 {
-    /// <summary>
-    ///     Context that represent the context of distributed locks using azure storage.
-    /// </summary>
-    public class AzureStorageDistributedLockContext : IDistributedLockContext
+    public interface IAzureStorageDistributedLock : IDistributedLock
     {
-        private readonly IAzureStorageDistributedLock _locker;
+        /// <summary>
+        ///     Options to configure the azure storage distributed locker
+        /// </summary>
+        AzureStorageDistributedLockOptions Options { get; }
 
-        internal AzureStorageDistributedLockContext(IAzureStorageDistributedLock locker)
-        {
-            _locker = locker;
-        }
-
-        /// <inheritdoc cref="IDistributedLockContext" />
-        public Task<bool> RenewLeaseAsync(TimeSpan renewInterval)
-        {
-            if (renewInterval >= _locker.Options.LeaseDuration)
-            {
-                throw new ArgumentException("Renew interval needs to be smaller than the lease duration.");
-            }
-
-            return _locker.RenewLease(renewInterval);
-        }
+        /// <summary>
+        ///     Renew the lease, getting more time to get a work done.
+        /// </summary>
+        /// <param name="renewInterval">required time</param>
+        /// <returns></returns>
+        Task<bool> RenewLease(TimeSpan renewInterval);
     }
 }

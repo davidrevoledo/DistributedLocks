@@ -22,30 +22,29 @@
 
 using System;
 using System.Threading.Tasks;
+using Moq;
+using Xunit;
 
-namespace DistributedLocks.AzureStorage
+namespace DistributedLocks.AzureStorage.Tests
 {
-    /// <summary>
-    ///     Context that represent the context of distributed locks using azure storage.
-    /// </summary>
-    public class AzureStorageDistributedLockContext : IDistributedLockContext
+    public class AzureStorageDistributedLockContextTests
     {
-        private readonly IAzureStorageDistributedLock _locker;
-
-        internal AzureStorageDistributedLockContext(IAzureStorageDistributedLock locker)
+        [Fact]
+        public async Task AzureStorageDistributedLockContext_renew_lock_should_fail_with_renewInterval_higher_than_lease_duration()
         {
-            _locker = locker;
-        }
+            // arrange
+            var locker = new Mock<IAzureStorageDistributedLock>();
 
-        /// <inheritdoc cref="IDistributedLockContext" />
-        public Task<bool> RenewLeaseAsync(TimeSpan renewInterval)
-        {
-            if (renewInterval >= _locker.Options.LeaseDuration)
-            {
-                throw new ArgumentException("Renew interval needs to be smaller than the lease duration.");
-            }
+            locker.Setup(c => c.Options)
+                .Returns(new AzureStorageDistributedLockOptions("key"));
 
-            return _locker.RenewLease(renewInterval);
+            var context = new AzureStorageDistributedLockContext(locker.Object);
+
+            // act
+            await context.RenewLeaseAsync(TimeSpan.FromSeconds(1));
+
+            // assert
+            locker.Verify(s => s.RenewLease(It.IsAny<TimeSpan>()));
         }
     }
 }
