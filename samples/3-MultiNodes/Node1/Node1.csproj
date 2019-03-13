@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="4.5.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\DistributedLock.AzureStorage\DistributedLocks.AzureStorage.csproj" />
+    <ProjectReference Include="..\..\..\src\DistributedLock\DistributedLocks.csproj" />
+  </ItemGroup>
+
+</Project>
