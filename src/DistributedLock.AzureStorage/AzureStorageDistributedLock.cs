@@ -99,8 +99,11 @@ namespace DistributedLocks.AzureStorage
                     {
                         await ReleaseLeaseAsync(lease).ConfigureAwait(false);
                     }
-
-                    await Task.Delay(Options.RetryWaitTime).ConfigureAwait(false);
+                    
+                    if (!operationPerformed)
+                    {
+                        await Task.Delay(Options.RetryWaitTime).ConfigureAwait(false);
+                    }
                 }
 
                 return value;
