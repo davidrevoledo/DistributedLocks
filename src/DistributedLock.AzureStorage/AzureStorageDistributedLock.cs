@@ -23,9 +23,9 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.WindowsAzure.Storage;
-using Microsoft.WindowsAzure.Storage.Blob;
-using Microsoft.WindowsAzure.Storage.Blob.Protocol;
+using Microsoft.Azure.Storage;
+using Microsoft.Azure.Storage.Blob;
+using Microsoft.Azure.Storage.Blob.Protocol;
 using Newtonsoft.Json;
 
 namespace DistributedLocks.AzureStorage
@@ -99,8 +99,11 @@ namespace DistributedLocks.AzureStorage
                     {
                         await ReleaseLeaseAsync(lease).ConfigureAwait(false);
                     }
-
-                    await Task.Delay(Options.RetryWaitTime).ConfigureAwait(false);
+                    
+                    if (!operationPerformed)
+                    {
+                        await Task.Delay(Options.RetryWaitTime).ConfigureAwait(false);
+                    }
                 }
 
                 return value;

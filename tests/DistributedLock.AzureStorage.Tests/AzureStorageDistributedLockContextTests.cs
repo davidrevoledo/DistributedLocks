@@ -38,13 +38,17 @@ namespace DistributedLocks.AzureStorage.Tests
             locker.Setup(c => c.Options)
                 .Returns(new AzureStorageDistributedLockOptions("key"));
 
+            locker.Setup(c => c.RenewLease(It.IsAny<TimeSpan>()))
+                .Returns(Task.FromResult(true));
+
             var context = new AzureStorageDistributedLockContext(locker.Object);
 
             // act
-            await context.RenewLeaseAsync(TimeSpan.FromSeconds(1));
+            var renewed = await context.RenewLeaseAsync(TimeSpan.FromSeconds(1));
 
             // assert
             locker.Verify(s => s.RenewLease(It.IsAny<TimeSpan>()));
+            Assert.True(renewed);
         }
     }
 }

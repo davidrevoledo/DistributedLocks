@@ -71,7 +71,8 @@ await  locker.ExecuteAsync(async context =>
 1. [Features](#features)
 2. [Installation](#installation)
 3. [Usage](#usage)
-4. [License](#license)
+4. [Versions](#versions)
+5. [License](#license)
 
 ## <a name="features"> Features </a>
 
@@ -181,6 +182,11 @@ For more examples please check samples folder in the repo.
 ====================
 
 [![forthebadge](https://forthebadge.com/images/badges/built-with-love.svg)](http://forthebadge.com)
+
+## <a name="versions"> Versions </a>
+
+- v1.0.0: Uses Microsoft.Azure.Storage.Blob v9.4.2
+- v1.0.1: Uses Microsoft.Azure.Storage.Blob v10.0.3 which has breaking changes because namespaces changed
 
 ## <a name="license"> License </a>
 
