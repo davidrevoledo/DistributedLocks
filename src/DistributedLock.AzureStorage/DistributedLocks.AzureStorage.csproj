@@ -2,7 +2,7 @@
     <PropertyGroup>
         <TargetFrameworks>net461;netstandard2.0</TargetFrameworks>
         <PackageId>DistributedLocks.AzureStorage</PackageId>
-        <PackageVersion>1.0.1</PackageVersion>
+        <PackageVersion>1.0.2</PackageVersion>
         <Authors>David Revoledo (Deivit)</Authors>
         <Owners>David Revoledo</Owners>
         <PackageProjectUrl>https://github.com/davidrevoledo/DistributedLocks</PackageProjectUrl>
@@ -12,7 +12,7 @@
         <PackageReleaseNotes>Update to Microsoft.Azure.Storage.Blob v10.0.3 which has breaking changes because namespaces have been changed</PackageReleaseNotes>
         <Copyright>Copyright 2018 (c) DistributedLock is licensed under the MIT License.</Copyright>
         <PackageTags>Cloud DistributedComputing Azure AzureStorage Locking Microservices CompetingNodes</PackageTags>
-        <Version>1.0.1</Version>
+        <Version>1.0.2</Version>
         <AssemblyName>DistributedLock.AzureStorage</AssemblyName>
     </PropertyGroup>
 
