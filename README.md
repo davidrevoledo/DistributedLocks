@@ -186,7 +186,7 @@ For more examples please check samples folder in the repo.
 ## <a name="versions"> Versions </a>
 
 - v1.0.0: Uses Microsoft.Azure.Storage.Blob v9.4.2
-- v1.0.1: Uses Microsoft.Azure.Storage.Blob v10.0.3 which has breaking changes because namespaces changed
+- v1.0.2: Uses Microsoft.Azure.Storage.Blob v10.0.3 which has breaking changes because namespaces changed
 
 ## <a name="license"> License </a>
 
