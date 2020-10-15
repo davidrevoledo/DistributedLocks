@@ -32,7 +32,7 @@ The usage is straight forward.
 ``` c#
 
 // Process 1
-IDistributedLock locker = await AzureStorageDistributedLock.CreateAsync(
+IDistributedLock locker = AzureStorageDistributedLock.Create(
             "a1239120391321", // account number
             options =>
             {
@@ -48,7 +48,7 @@ await  locker.ExecuteAsync(async context =>
 });
             
 // Process 2
-IDistributedLock locker = await AzureStorageDistributedLock.CreateAsync(
+IDistributedLock locker = AzureStorageDistributedLock.Create(
             "a1239120391321", // account number
             options =>
             {
@@ -99,7 +99,7 @@ paket add DistributedLocks
 ``` c#
 
 // Process 1
-IDistributedLock locker = await AzureStorageDistributedLock.CreateAsync(
+IDistributedLock locker = AzureStorageDistributedLock.Create(
             "AnyKey", // account number
             options =>
             {
@@ -114,7 +114,7 @@ await  locker.ExecuteAsync(async context =>
 ```
 #### Options 
 ``` c#
-    locker = await AzureStorageDistributedLock.CreateAsync(
+    locker = AzureStorageDistributedLock.Create(
         "work",
         options =>
         {
@@ -136,7 +136,7 @@ The Renewal time should be less than the Lease Duration.
 
       return locker.ExecuteAsync(async context =>
       {
-          locker = await AzureStorageDistributedLock.CreateAsync(
+          locker = AzureStorageDistributedLock.Create(
             "longmethod",
             options =>
             {
