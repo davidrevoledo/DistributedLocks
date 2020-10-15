@@ -2,17 +2,17 @@
     <PropertyGroup>
         <TargetFrameworks>netstandard2.1</TargetFrameworks>
         <PackageId>DistributedLocks.AzureStorage</PackageId>
-        <PackageVersion>1.0.2</PackageVersion>
+        <PackageVersion>1.0.3</PackageVersion>
         <Authors>David Revoledo (Deivit)</Authors>
         <Owners>David Revoledo</Owners>
         <PackageProjectUrl>https://github.com/davidrevoledo/DistributedLocks</PackageProjectUrl>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <Description>Easy usage implementation of distributed locks using azure storage account.</Description>
         <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-        <PackageReleaseNotes>Update to Microsoft.Azure.Storage.Blob v10.0.3 which has breaking changes because namespaces have been changed</PackageReleaseNotes>
+        <PackageReleaseNotes>Update to Azure.Storage.Blob v12.6.0</PackageReleaseNotes>
         <Copyright>Copyright 2018 (c) DistributedLock is licensed under the MIT License.</Copyright>
         <PackageTags>Cloud DistributedComputing Azure AzureStorage Locking Microservices CompetingNodes</PackageTags>
-        <Version>1.0.2</Version>
+        <Version>1.0.3</Version>
         <AssemblyName>DistributedLock.AzureStorage</AssemblyName>
     </PropertyGroup>
 
