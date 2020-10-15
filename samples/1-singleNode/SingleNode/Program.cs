@@ -17,7 +17,7 @@ namespace SingleNode
 
             Task.Run(async () =>
             {
-                locker = await AzureStorageDistributedLock.CreateAsync(
+                locker = AzureStorageDistributedLock.Create(
                     "parallelwork1",
                     options =>
                     {

@@ -22,7 +22,7 @@ namespace Node1
             IDistributedLock locker;
             var storageKey = ConfigurationManager.AppSettings["storageKey"];
 
-            locker = await AzureStorageDistributedLock.CreateAsync(
+            locker = AzureStorageDistributedLock.Create(
                 "parallelwork1",
                 options =>
                 {

@@ -20,8 +20,9 @@
 //SOFTWARE.
 // Project Lead - David Revoledo davidrevoledo@d-genix.com
 
-using Microsoft.Azure.Storage.Blob;
-using Newtonsoft.Json;
+using Azure.Storage.Blobs.Models;
+using Azure.Storage.Blobs.Specialized;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace DistributedLocks.AzureStorage
@@ -33,7 +34,7 @@ namespace DistributedLocks.AzureStorage
         {
         }
 
-        internal AzureBlobLease(string key, CloudBlockBlob blob) : base(key)
+        internal AzureBlobLease(string key, BlockBlobClient blob) : base(key)
         {
             Blob = blob;
         }
@@ -45,19 +46,19 @@ namespace DistributedLocks.AzureStorage
             Blob = source.Blob;
         }
 
-        internal AzureBlobLease(Lease source, CloudBlockBlob blob) : base(source)
+        internal AzureBlobLease(Lease source, BlockBlobClient blob) : base(source)
         {
             Offset = source.Offset;
             Blob = blob;
         }
 
         // do not serialize
-        [JsonIgnore] public CloudBlockBlob Blob { get; }
+        [JsonIgnore] public BlockBlobClient Blob { get; }
 
         public override async Task<bool> IsExpired()
         {
-            await Blob.FetchAttributesAsync().ConfigureAwait(false); // Get the latest metadata
-            var currentState = Blob.Properties.LeaseState;
+            var props = await Blob.GetPropertiesAsync().ConfigureAwait(false); // Get the latest metadata
+            var currentState = props.Value.LeaseState;
             return currentState != LeaseState.Leased;
         }
     }

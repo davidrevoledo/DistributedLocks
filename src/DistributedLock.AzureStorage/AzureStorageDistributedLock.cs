@@ -21,11 +21,13 @@
 // Project Lead - David Revoledo davidrevoledo@d-genix.com
 
 using System;
+using System.IO;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Azure.Storage;
-using Microsoft.Azure.Storage.Blob;
-using Microsoft.Azure.Storage.Blob.Protocol;
+using Azure;
+using Azure.Storage.Blobs.Models;
+using Azure.Storage.Blobs.Specialized;
 using Newtonsoft.Json;
 
 namespace DistributedLocks.AzureStorage
@@ -38,11 +40,7 @@ namespace DistributedLocks.AzureStorage
         private readonly IDistributedLockContext _currentContext;
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1);
 
-        private CloudStorageAccount _cloudStorageAccount;
-        private CloudBlobDirectory _consumerGroupDirectory;
         private int _disposeSignaled;
-        private CloudBlobContainer _eventHubContainer;
-        private OperationContext _storageContext;
         private AzureBlobLease _currentLease;
 
         private AzureStorageDistributedLock(AzureStorageDistributedLockOptions options)
@@ -149,14 +147,13 @@ namespace DistributedLocks.AzureStorage
         /// <param name="key">key for the lock.</param>
         /// <param name="optionsBuilder">options to build the locker.</param>
         /// <returns></returns>
-        public static async Task<IDistributedLock> CreateAsync(string key, Action<AzureStorageDistributedLockOptions> optionsBuilder = null)
+        public static IDistributedLock Create(string key, Action<AzureStorageDistributedLockOptions> optionsBuilder = null)
         {
             var options = new AzureStorageDistributedLockOptions(key);
             optionsBuilder?.Invoke(options);
 
             var locker = new AzureStorageDistributedLock(options);
 
-            await locker.Init().ConfigureAwait(false);
             return locker;
         }
 
@@ -167,11 +164,7 @@ namespace DistributedLocks.AzureStorage
         /// <returns></returns>
         public async Task<bool> RenewLease(TimeSpan renewInterval)
         {
-            var renewRequestOptions = new BlobRequestOptions
-            {
-                ServerTimeout = renewInterval,
-                MaximumExecutionTime = Options.LeaseDuration
-            };
+            var renewRequestOptions = new RequestConditions();
 
             var lease = _currentLease;
 
@@ -180,12 +173,9 @@ namespace DistributedLocks.AzureStorage
 
             try
             {
-                await lease.Blob.RenewLeaseAsync(
-                    AccessCondition.GenerateLeaseCondition(lease.Token),
-                    renewRequestOptions,
-                    _storageContext).ConfigureAwait(false);
+                await lease.Blob.GetBlobLeaseClient(lease.Token).RenewAsync(renewRequestOptions);
             }
-            catch (StorageException)
+            catch (RequestFailedException)
             {
                 return false;
             }
@@ -193,21 +183,9 @@ namespace DistributedLocks.AzureStorage
             return true;
         }
 
-        private async Task Init()
+        private BlockBlobClient GetBlockBlobReference(string key)
         {
-            _cloudStorageAccount = CloudStorageAccount.Parse(Options.ConnectionString);
-            var storageClient = _cloudStorageAccount.CreateCloudBlobClient();
-
-            _eventHubContainer = storageClient.GetContainerReference(Options.Container.ToLower());
-            await _eventHubContainer.CreateIfNotExistsAsync().ConfigureAwait(false);
-
-            _consumerGroupDirectory = _eventHubContainer.GetDirectoryReference(Options.Directory.ToLower());
-            _storageContext = new OperationContext();
-        }
-
-        private CloudBlockBlob GetBlockBlobReference(string key)
-        {
-            var leaseBlob = _consumerGroupDirectory.GetBlockBlobReference(key);
+            var leaseBlob = new BlockBlobClient(Options.ConnectionString, Options.Container.ToLower(), key);
             return leaseBlob;
         }
 
@@ -222,17 +200,23 @@ namespace DistributedLocks.AzureStorage
 
                 if (await leaseBlob.ExistsAsync(CancellationToken.None)) return await GetLeaseAsync(key).ConfigureAwait(false);
 
-                await leaseBlob.UploadTextAsync(
-                    jsonLease,
-                    null,
-                    AccessCondition.GenerateIfNoneMatchCondition("*"),
-                    null,
-                    _storageContext).ConfigureAwait(false);
+                using (var uploadFileStream = new MemoryStream(Encoding.UTF8.GetBytes(jsonLease ?? "")))
+                {
+                    var options = new BlobUploadOptions()
+                    {
+                        Conditions = new BlobRequestConditions()
+                        {
+                            LeaseId = returnLease.Token
+                        }
+                    };
+
+                    await leaseBlob.UploadAsync(uploadFileStream, options).ConfigureAwait(false);
+                }
             }
-            catch (StorageException se)
+            catch (RequestFailedException se)
             {
-                if (se.RequestInformation.ErrorCode == BlobErrorCodeStrings.BlobAlreadyExists ||
-                    se.RequestInformation.ErrorCode == BlobErrorCodeStrings.LeaseIdMissing) // occurs when somebody else already has leased the blob
+                if (se.ErrorCode == BlobErrorCode.BlobAlreadyExists ||
+                    se.ErrorCode == BlobErrorCode.LeaseIdMissing) // occurs when somebody else already has leased the blob
                 {
                     returnLease = await GetLeaseAsync(key).ConfigureAwait(false);
                 }
@@ -250,7 +234,7 @@ namespace DistributedLocks.AzureStorage
             AzureBlobLease result = null;
             var leaseBlob = GetBlockBlobReference(key);
 
-            if (await leaseBlob.ExistsAsync(null, _storageContext).ConfigureAwait(false))
+            if (await leaseBlob.ExistsAsync().ConfigureAwait(false))
             {
                 result = await DownloadLeaseAsync(leaseBlob).ConfigureAwait(false);
             }
@@ -258,12 +242,16 @@ namespace DistributedLocks.AzureStorage
             return result;
         }
 
-        private static async Task<AzureBlobLease> DownloadLeaseAsync(CloudBlockBlob blob) // throws StorageException, IOException
+        private static async Task<AzureBlobLease> DownloadLeaseAsync(BlockBlobClient blob) // throws StorageException, IOException
         {
-            var jsonLease = await blob.DownloadTextAsync().ConfigureAwait(false);
-            var rehydrated = (AzureBlobLease)JsonConvert.DeserializeObject(jsonLease, typeof(AzureBlobLease));
-            var blobLease = new AzureBlobLease(rehydrated, blob);
-            return blobLease;
+            var jsonLease = await blob.DownloadAsync().ConfigureAwait(false);
+            using (var stream = new StreamReader(jsonLease.Value.Content))
+            {
+                var rehydrated = (AzureBlobLease)JsonConvert.DeserializeObject(stream.ReadToEnd(), typeof(AzureBlobLease));
+                var blobLease = new AzureBlobLease(rehydrated, blob);
+
+                return blobLease;
+            }
         }
 
         private async Task<bool> AcquireLeaseAsync(AzureBlobLease lease)
@@ -274,36 +262,28 @@ namespace DistributedLocks.AzureStorage
             try
             {
                 string newToken;
-                await leaseBlob.FetchAttributesAsync(null, null, _storageContext).ConfigureAwait(false);
+                var props = await leaseBlob.GetPropertiesAsync().ConfigureAwait(false);
 
-                if (leaseBlob.Properties.LeaseState == LeaseState.Leased)
+                if (props.Value.LeaseState == LeaseState.Leased)
                 {
                     if (string.IsNullOrEmpty(lease.Token))
                     {
                         return false;
                     }
 
-                    newToken = await leaseBlob.ChangeLeaseAsync(
-                        newLeaseId,
-                        AccessCondition.GenerateLeaseCondition(lease.Token),
-                        null,
-                        _storageContext).ConfigureAwait(false);
+                    var response = await leaseBlob.GetBlobLeaseClient(lease.Token).ChangeAsync(newLeaseId);
+                    newToken = response.Value.LeaseId;
                 }
                 else
                 {
                     try
                     {
-                        newToken = await leaseBlob.AcquireLeaseAsync(
-                                Options.LeaseDuration,
-                                newLeaseId,
-                                null,
-                                null,
-                                _storageContext)
-                            .ConfigureAwait(false);
+                        var response = await leaseBlob.GetBlobLeaseClient(lease.Token).AcquireAsync(Options.LeaseDuration).ConfigureAwait(false);
+                        newToken = response.Value.LeaseId;
                     }
-                    catch (StorageException se)
-                        when (se.RequestInformation != null
-                              && se.RequestInformation.ErrorCode.Equals(BlobErrorCodeStrings.LeaseAlreadyPresent, StringComparison.OrdinalIgnoreCase))
+                    catch (RequestFailedException se)
+                        when (se != null
+                              && se.ErrorCode == BlobErrorCode.LeaseAlreadyPresent)
                     {
                         return false;
                     }
@@ -311,14 +291,20 @@ namespace DistributedLocks.AzureStorage
 
                 lease.Token = newToken;
                 lease.IncrementEpoch(); // Increment epoch each time lease is acquired or stolen by a new host
-                await leaseBlob.UploadTextAsync(
-                    JsonConvert.SerializeObject(lease),
-                    null,
-                    AccessCondition.GenerateLeaseCondition(lease.Token),
-                    null,
-                    _storageContext).ConfigureAwait(false);
+                using (var uploadFileStream = new MemoryStream(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(lease) ?? "")))
+                {
+                    var options = new BlobUploadOptions()
+                    {
+                        Conditions = new BlobRequestConditions()
+                        {
+                            LeaseId = lease.Token
+                        }
+                    };
+
+                    await leaseBlob.UploadAsync(uploadFileStream, options).ConfigureAwait(false);
+                }
             }
-            catch (StorageException se)
+            catch (RequestFailedException se)
             {
                 throw HandleStorageException(lockerKey, se);
             }
@@ -326,14 +312,12 @@ namespace DistributedLocks.AzureStorage
             return true;
         }
 
-        private static Exception HandleStorageException(string key, StorageException se)
+        private static Exception HandleStorageException(string key, RequestFailedException se)
         {
-            if (se.RequestInformation.HttpStatusCode == 409 || // conflict
-                se.RequestInformation.HttpStatusCode == 412) // precondition failed
-                if (se.RequestInformation.ErrorCode == null ||
-                    se.RequestInformation.ErrorCode == BlobErrorCodeStrings.LeaseLost ||
-                    se.RequestInformation.ErrorCode == BlobErrorCodeStrings.LeaseIdMismatchWithLeaseOperation ||
-                    se.RequestInformation.ErrorCode == BlobErrorCodeStrings.LeaseIdMismatchWithBlobOperation)
+                if (se.ErrorCode == null ||
+                    se.ErrorCode == BlobErrorCode.LeaseLost ||
+                    se.ErrorCode == BlobErrorCode.LeaseIdMismatchWithLeaseOperation ||
+                    se.ErrorCode == BlobErrorCode.LeaseIdMismatchWithBlobOperation)
                 {
                     return new Exception(key, se);
                 }
@@ -356,15 +340,22 @@ namespace DistributedLocks.AzureStorage
                 {
                     Token = string.Empty
                 };
-                await leaseBlob.UploadTextAsync(
-                    JsonConvert.SerializeObject(releasedCopy),
-                    null,
-                    AccessCondition.GenerateLeaseCondition(leaseId),
-                    null,
-                    _storageContext).ConfigureAwait(false);
-                await leaseBlob.ReleaseLeaseAsync(AccessCondition.GenerateLeaseCondition(leaseId)).ConfigureAwait(false);
+                using (var uploadFileStream = new MemoryStream(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(releasedCopy) ?? "")))
+                {
+                    var options = new BlobUploadOptions()
+                    {
+                        Conditions = new BlobRequestConditions()
+                        {
+                            LeaseId = lease.Token
+                        }
+                    };
+
+                    await leaseBlob.UploadAsync(uploadFileStream, options).ConfigureAwait(false);
+                    await leaseBlob.GetBlobLeaseClient(leaseId).ReleaseAsync().ConfigureAwait(false);
+                }
+                    
             }
-            catch (StorageException se)
+            catch (RequestFailedException se)
             {
                 throw HandleStorageException(key, se);
             }
