@@ -158,6 +158,19 @@ namespace DistributedLocks.AzureStorage
         }
 
         /// <summary>
+        ///     Create an AzureStorage Distributed Locker. 
+        /// </summary>
+        /// <param name="key">key for the lock.</param>
+        /// <param name="optionsBuilder">options to build the locker.</param>
+        /// <returns></returns>
+        public async static Task<IDistributedLock> CreateAsync(string key, Action<AzureStorageDistributedLockOptions> optionsBuilder = null)
+        {
+            // Async is not used anymore, but this method was kept to not break existing code.
+            var result = await Task.FromResult(Create(key, optionsBuilder));
+            return result;
+        }
+
+        /// <summary>
         ///     Renew the lease, getting more time to get a work done.
         /// </summary>
         /// <param name="renewInterval">required time</param>
