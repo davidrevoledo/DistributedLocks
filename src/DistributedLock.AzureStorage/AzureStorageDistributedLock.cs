@@ -366,7 +366,6 @@ namespace DistributedLocks.AzureStorage
                     await leaseBlob.UploadAsync(uploadFileStream, options).ConfigureAwait(false);
                     await leaseBlob.GetBlobLeaseClient(leaseId).ReleaseAsync().ConfigureAwait(false);
                 }
-                    
             }
             catch (RequestFailedException se)
             {
