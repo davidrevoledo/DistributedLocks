@@ -163,10 +163,10 @@ namespace DistributedLocks.AzureStorage
         /// <param name="key">key for the lock.</param>
         /// <param name="optionsBuilder">options to build the locker.</param>
         /// <returns></returns>
-        public async static Task<IDistributedLock> CreateAsync(string key, Action<AzureStorageDistributedLockOptions> optionsBuilder = null)
+        public static Task<IDistributedLock> CreateAsync(string key, Action<AzureStorageDistributedLockOptions> optionsBuilder = null)
         {
             // Async is not used anymore, but this method was kept to not break existing code.
-            var result = await Task.FromResult(Create(key, optionsBuilder));
+            var result = Task.FromResult(Create(key, optionsBuilder));
             return result;
         }
 
@@ -186,7 +186,7 @@ namespace DistributedLocks.AzureStorage
 
             try
             {
-                await lease.Blob.GetBlobLeaseClient(lease.Token).RenewAsync(renewRequestOptions);
+                await lease.Blob.GetBlobLeaseClient(lease.Token).RenewAsync(renewRequestOptions).ConfigureAwait(false);
             }
             catch (RequestFailedException)
             {
@@ -213,18 +213,7 @@ namespace DistributedLocks.AzureStorage
 
                 if (await leaseBlob.ExistsAsync(CancellationToken.None)) return await GetLeaseAsync(key).ConfigureAwait(false);
 
-                using (var uploadFileStream = new MemoryStream(Encoding.UTF8.GetBytes(jsonLease ?? "")))
-                {
-                    var options = new BlobUploadOptions()
-                    {
-                        Conditions = new BlobRequestConditions()
-                        {
-                            LeaseId = returnLease.Token
-                        }
-                    };
-
-                    await leaseBlob.UploadAsync(uploadFileStream, options).ConfigureAwait(false);
-                }
+                await SetBlobStateAsync(returnLease).ConfigureAwait(false);
             }
             catch (RequestFailedException se)
             {
@@ -304,18 +293,8 @@ namespace DistributedLocks.AzureStorage
 
                 lease.Token = newToken;
                 lease.IncrementEpoch(); // Increment epoch each time lease is acquired or stolen by a new host
-                using (var uploadFileStream = new MemoryStream(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(lease) ?? "")))
-                {
-                    var options = new BlobUploadOptions()
-                    {
-                        Conditions = new BlobRequestConditions()
-                        {
-                            LeaseId = lease.Token
-                        }
-                    };
 
-                    await leaseBlob.UploadAsync(uploadFileStream, options).ConfigureAwait(false);
-                }
+                await SetBlobStateAsync(lease).ConfigureAwait(false);
             }
             catch (RequestFailedException se)
             {
@@ -323,6 +302,25 @@ namespace DistributedLocks.AzureStorage
             }
 
             return true;
+        }
+
+        private async Task SetBlobStateAsync(AzureBlobLease lease, string leaseId = null)
+        {
+            // if lease id is not sent then use the current lease token
+            if (leaseId == null) leaseId = lease.Token;
+
+            using (var uploadFileStream = new MemoryStream(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(lease) ?? "")))
+            {
+                var options = new BlobUploadOptions()
+                {
+                    Conditions = new BlobRequestConditions()
+                    {
+                        LeaseId = leaseId
+                    }
+                };
+
+                await lease.Blob.UploadAsync(uploadFileStream, options).ConfigureAwait(false);
+            }
         }
 
         private static Exception HandleStorageException(string key, RequestFailedException se)
@@ -353,19 +351,10 @@ namespace DistributedLocks.AzureStorage
                 {
                     Token = string.Empty
                 };
-                using (var uploadFileStream = new MemoryStream(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(releasedCopy) ?? "")))
-                {
-                    var options = new BlobUploadOptions()
-                    {
-                        Conditions = new BlobRequestConditions()
-                        {
-                            LeaseId = lease.Token
-                        }
-                    };
 
-                    await leaseBlob.UploadAsync(uploadFileStream, options).ConfigureAwait(false);
-                    await leaseBlob.GetBlobLeaseClient(leaseId).ReleaseAsync().ConfigureAwait(false);
-                }
+                await SetBlobStateAsync(releasedCopy, leaseId).ConfigureAwait(false);
+
+                await leaseBlob.GetBlobLeaseClient(leaseId).ReleaseAsync().ConfigureAwait(false);
             }
             catch (RequestFailedException se)
             {
