@@ -9,7 +9,7 @@ namespace Node2
 {
     internal class Program
     {
-        private static void Main(string[] args)
+        private static void Main()
         {
             Console.ForegroundColor = ConsoleColor.Green;
             Task.Run(async () => { await ExecuteWork(); }).Wait();
@@ -22,7 +22,7 @@ namespace Node2
             IDistributedLock locker;
             var storageKey = ConfigurationManager.AppSettings["storageKey"];
 
-            locker = await AzureStorageDistributedLock.CreateAsync(
+            locker = AzureStorageDistributedLock.Create(
                 "parallelwork1",
                 options =>
                 {
